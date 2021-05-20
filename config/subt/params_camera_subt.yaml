@@ -6,7 +6,8 @@ project_name: "lvi_sam"
 #common parameters
 imu_topic: "/imu/data"
 image_topic: "/camera/image_raw"
-point_cloud_topic: "lvi_sam/lidar/deskew/cloud_deskewed"
+point_cloud_topic: "/velodyne_points"
+# point_cloud_topic: "lvi_sam/lidar/deskew/cloud_deskewed"
 #laser_topic: "/velodyne_points"
 #depth_topic: "/velodyne_points"
 #odom_topic:  "vins_estimator/imu_propagate"
@@ -42,7 +43,7 @@ projection_parameters:
    u0: 528.3552460038057
    v0: 374.80976440349616
 
-fisheye_mask: "/config/subt/fisheye_mask.png"
+fisheye_mask: "/config/subt/fisheye_mask_ds.png"
 
 #imu parameters       The more accurate parameters you provide, the worse performance
 acc_n: 0.02         # accelerometer measurement noise standard deviation.
@@ -57,7 +58,7 @@ estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trus
                         # 2  Don't know anything about extrinsic parameters. You don't need to give R,T. We will try to calibrate it. Do some rotation movement at beginning. 
 
 #Rotation from camera frame to imu frame, imu^R_cam
-extrinsicRotation_imu_camera: !!opencv-matrix
+extrinsicRotation: !!opencv-matrix
   rows: 3
   cols: 3
   dt: d
@@ -65,7 +66,7 @@ extrinsicRotation_imu_camera: !!opencv-matrix
          -0.99939148,  0.02859798, -0.01997047,
          -0.02740122, -0.99795055,  -0.05782628]
 #Translation from camera frame to imu frame, imu^T_cam
-extrinsicTranslation_imu_camera: !!opencv-matrix
+extrinsicTranslation: !!opencv-matrix
   rows: 3
   cols: 1
   dt: d

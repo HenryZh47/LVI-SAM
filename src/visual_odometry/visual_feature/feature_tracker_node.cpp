@@ -310,6 +310,8 @@ void lidar_callback(const sensor_msgs::PointCloud2ConstPtr& laser_msg)
     downSizeFilter.setInputCloud(depthCloud);
     downSizeFilter.filter(*depthCloudDS);
     *depthCloud = *depthCloudDS;
+
+    ROS_WARN("lidar callback end!");
 }
 
 int main(int argc, char **argv)
