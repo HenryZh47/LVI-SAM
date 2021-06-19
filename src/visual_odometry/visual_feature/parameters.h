@@ -2,7 +2,10 @@
 
 #include <ros/ros.h>
 #include <ros/package.h>
+#include <eigen3/Eigen/Core>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/eigen.hpp>
 
 #include <std_msgs/Header.h>
 #include <std_msgs/Bool.h>
@@ -92,6 +95,15 @@ extern double L_C_RX;
 extern double L_C_RY;
 extern double L_C_RZ;
 
+extern cv::Mat R_lc, T_lc;
+extern Eigen::Matrix3d eigen_R_lc;
+extern Eigen::Vector3d eigen_T_lc;
+extern Eigen::Matrix4d trans_lc;
+
+extern cv::Mat R_ci, T_ci;
+extern Eigen::Matrix3d eigen_R_ci;
+extern Eigen::Vector3d eigen_T_ci;
+extern Eigen::Matrix4d trans_ci;
 
 void readParameters(ros::NodeHandle &n);
 

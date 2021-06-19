@@ -232,8 +232,8 @@ void lidar_callback(const sensor_msgs::PointCloud2ConstPtr& laser_msg)
     static tf::TransformListener listener;
     static tf::StampedTransform transform;
     try{
-        listener.waitForTransform("vins_world", "vins_body_ros", laser_msg->header.stamp, ros::Duration(0.01));
-        listener.lookupTransform("vins_world", "vins_body_ros", laser_msg->header.stamp, transform);
+        listener.waitForTransform("vins_world", "vins_body", laser_msg->header.stamp, ros::Duration(0.01));
+        listener.lookupTransform("vins_world", "vins_body", laser_msg->header.stamp, transform);
     } 
     catch (tf::TransformException ex){
         // ROS_ERROR("lidar no tf");
@@ -260,21 +260,26 @@ void lidar_callback(const sensor_msgs::PointCloud2ConstPtr& laser_msg)
     downSizeFilter.filter(*laser_cloud_in_ds);
     *laser_cloud_in = *laser_cloud_in_ds;
 
+    // henryzh47: first transform then filter in camera frame
+    // 4. offset T_lidar -> T_camera 
+    pcl::PointCloud<PointType>::Ptr laser_cloud_offset(new pcl::PointCloud<PointType>());
+    //Eigen::Affine3f transOffset = pcl::getTransformation(L_C_TX, L_C_TY, L_C_TZ, L_C_RX, L_C_RY, L_C_RZ);
+    pcl::transformPointCloud(*laser_cloud_in, *laser_cloud_offset, trans_lc);
+    *laser_cloud_in = *laser_cloud_offset;
+
     // 3. filter lidar points (only keep points in camera view)
     pcl::PointCloud<PointType>::Ptr laser_cloud_in_filter(new pcl::PointCloud<PointType>());
     for (int i = 0; i < (int)laser_cloud_in->size(); ++i)
     {
         PointType p = laser_cloud_in->points[i];
-        if (p.x >= 0 && abs(p.y / p.x) <= 10 && abs(p.z / p.x) <= 10)
+        if (p.z >= 0 && abs(p.x / p.z) <= 10 && abs(p.y / p.z) <= 10)
             laser_cloud_in_filter->push_back(p);
     }
     *laser_cloud_in = *laser_cloud_in_filter;
 
-    // TODO: transform to IMU body frame
-    // 4. offset T_lidar -> T_camera 
-    pcl::PointCloud<PointType>::Ptr laser_cloud_offset(new pcl::PointCloud<PointType>());
-    Eigen::Affine3f transOffset = pcl::getTransformation(L_C_TX, L_C_TY, L_C_TZ, L_C_RX, L_C_RY, L_C_RZ);
-    pcl::transformPointCloud(*laser_cloud_in, *laser_cloud_offset, transOffset);
+    // henryzh47: transform to IMU body frame
+    // TODO (henryzh47): compound transform then apply to cloud
+    pcl::transformPointCloud(*laser_cloud_in, *laser_cloud_offset, trans_ci);
     *laser_cloud_in = *laser_cloud_offset;
 
     // 5. transform new cloud into global odom frame
@@ -310,8 +315,6 @@ void lidar_callback(const sensor_msgs::PointCloud2ConstPtr& laser_msg)
     downSizeFilter.setInputCloud(depthCloud);
     downSizeFilter.filter(*depthCloudDS);
     *depthCloud = *depthCloudDS;
-
-    ROS_WARN("lidar callback end!");
 }
 
 int main(int argc, char **argv)

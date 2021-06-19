@@ -110,8 +110,8 @@ public:
 
         // 0.3 look up transform at current image time
         try{
-            listener.waitForTransform("vins_world", "vins_body_ros", stamp_cur, ros::Duration(0.01));
-            listener.lookupTransform("vins_world", "vins_body_ros", stamp_cur, transform);
+            listener.waitForTransform("vins_world", "vins_body", stamp_cur, ros::Duration(0.01));
+            listener.lookupTransform("vins_world", "vins_body", stamp_cur, transform);
         } 
         catch (tf::TransformException ex){
             // ROS_ERROR("image no tf");
@@ -127,8 +127,12 @@ public:
         Eigen::Affine3f transNow = pcl::getTransformation(xCur, yCur, zCur, rollCur, pitchCur, yawCur);
 
         // 0.4 transform cloud from global frame to camera frame
+        // henryzh47: here transform to IMU frame
         pcl::PointCloud<PointType>::Ptr depth_cloud_local(new pcl::PointCloud<PointType>());
         pcl::transformPointCloud(*depthCloud, *depth_cloud_local, transNow.inverse());
+        // henryzh47: now transform from IMU to camera frame
+        // ROS_WARN_STREAM("CI transform inverse: " << trans_ci.inverse());
+        // pcl::transformPointCloud(*depth_cloud_local, *depth_cloud_local, trans_ci);
 
         // 0.5 project undistorted normalized (z) 2d features onto a unit sphere
         pcl::PointCloud<PointType>::Ptr features_3d_sphere(new pcl::PointCloud<PointType>());
@@ -139,6 +143,10 @@ public:
             feature_cur.normalize(); 
             // convert to ROS standard
             PointType p;
+            // henryzh47: why need to change this?
+            // p.x =  feature_cur(2);
+            // p.y = -feature_cur(0);
+            // p.z = -feature_cur(1);
             p.x =  feature_cur(2);
             p.y = -feature_cur(0);
             p.z = -feature_cur(1);
@@ -185,7 +193,7 @@ public:
             }
         }
         *depth_cloud_local = *depth_cloud_local_filter2;
-        publishCloud(&pub_depth_cloud, depth_cloud_local, stamp_cur, "vins_body_ros");
+        publishCloud(&pub_depth_cloud, depth_cloud_local, stamp_cur, "vins_body");
 
         // 5. project depth cloud onto a unit sphere
         pcl::PointCloud<PointType>::Ptr depth_cloud_unit_sphere(new pcl::PointCloud<PointType>());
@@ -259,7 +267,7 @@ public:
         }
 
         // visualize features in cartesian 3d space (including the feature without depth (default 1))
-        publishCloud(&pub_depth_feature, features_3d_sphere, stamp_cur, "vins_body_ros");
+        publishCloud(&pub_depth_feature, features_3d_sphere, stamp_cur, "vins_body");
         
         // update depth value for return
         for (int i = 0; i < (int)features_3d_sphere->size(); ++i)
@@ -277,9 +285,13 @@ public:
             for (int i = 0; i < (int)depth_cloud_local->size(); ++i)
             {
                 // convert points from 3D to 2D
+                // henryzh47: why need to change this?
                 Eigen::Vector3d p_3d(-depth_cloud_local->points[i].y,
                                      -depth_cloud_local->points[i].z,
                                       depth_cloud_local->points[i].x);
+                // Eigen::Vector3d p_3d(depth_cloud_local->points[i].x,
+                //                      depth_cloud_local->points[i].y,
+                //                       depth_cloud_local->points[i].z);
                 Eigen::Vector2d p_2d;
                 camera_model->spaceToPlane(p_3d, p_2d);
                 

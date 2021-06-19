@@ -81,16 +81,22 @@ void pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, co
     // imu odometry in ROS format (change rotation), used for lidar odometry initial guess
     odometry.pose.covariance[0] = double(failureId); // notify lidar odometry failure
 
+    // TODO henryzh47: wtf is this?
     tf::Quaternion q_odom_cam(Q.x(), Q.y(), Q.z(), Q.w());
     tf::Quaternion q_cam_to_lidar(0, 1, 0, 0); // mark: camera - lidar
     tf::Quaternion q_odom_ros = q_odom_cam * q_cam_to_lidar;
     tf::quaternionTFToMsg(q_odom_ros, odometry.pose.pose.orientation);
     pub_latest_odometry_ros.publish(odometry);
 
+    // TODO henryzh47: wtf? why hardcode
     // TF of camera in vins_world in ROS format (change rotation), used for depth registration
     tf::Transform t_w_body = tf::Transform(q_odom_ros, tf::Vector3(P.x(), P.y(), P.z()));
     tf::StampedTransform trans_world_vinsbody_ros = tf::StampedTransform(t_w_body, header.stamp, "vins_world", "vins_body_ros");
     br.sendTransform(trans_world_vinsbody_ros);
+    // henryzh47: publish normal tf frames
+    tf::Transform t_w_body_orig = tf::Transform(q_odom_cam, tf::Vector3(P.x(), P.y(), P.z()));
+    tf::StampedTransform trans_world_vinsbody = tf::StampedTransform(t_w_body_orig, header.stamp, "vins_world", "vins_body");
+    br.sendTransform(trans_world_vinsbody);
 
     if (ALIGN_CAMERA_LIDAR_COORDINATE)
     {

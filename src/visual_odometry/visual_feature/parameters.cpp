@@ -28,6 +28,16 @@ double L_C_RX;
 double L_C_RY;
 double L_C_RZ;
 
+cv::Mat R_lc, T_lc;
+Eigen::Matrix3d eigen_R_lc;
+Eigen::Vector3d eigen_T_lc;
+Eigen::Matrix4d trans_lc;
+
+cv::Mat R_ci, T_ci;
+Eigen::Matrix3d eigen_R_ci;
+Eigen::Vector3d eigen_T_ci;
+Eigen::Matrix4d trans_ci;
+
 int USE_LIDAR;
 int LIDAR_SKIP;
 
@@ -71,6 +81,22 @@ void readParameters(ros::NodeHandle &n)
     L_C_RX = fsSettings["lidar_to_cam_rx"];
     L_C_RY = fsSettings["lidar_to_cam_ry"];
     L_C_RZ = fsSettings["lidar_to_cam_rz"];
+
+    fsSettings["extrinsicRotationLC"] >> R_lc;
+    fsSettings["extrinsicTranslationLC"] >> T_lc;
+    cv::cv2eigen(R_lc, eigen_R_lc);
+    cv::cv2eigen(T_lc, eigen_T_lc);
+    trans_lc = Eigen::Matrix4d::Identity();
+    trans_lc.block<3, 3>(0, 0) = eigen_R_lc;
+    trans_lc.block<3, 1>(0, 3) = eigen_T_lc;
+
+    fsSettings["extrinsicRotation"] >> R_ci;
+    fsSettings["extrinsicTranslation"] >> T_ci;
+    cv::cv2eigen(R_ci, eigen_R_ci);
+    cv::cv2eigen(T_ci, eigen_T_ci);
+    trans_ci = Eigen::Matrix4d::Identity();
+    trans_ci.block<3, 3>(0, 0) = eigen_R_ci;
+    trans_ci.block<3, 1>(0, 3) = eigen_T_ci;
 
     // fisheye mask
     FISHEYE = fsSettings["fisheye"];

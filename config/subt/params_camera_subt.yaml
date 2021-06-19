@@ -8,9 +8,6 @@ imu_topic: "/imu/data"
 image_topic: "/camera/image_raw"
 point_cloud_topic: "/velodyne_points"
 # point_cloud_topic: "lvi_sam/lidar/deskew/cloud_deskewed"
-#laser_topic: "/velodyne_points"
-#depth_topic: "/velodyne_points"
-#odom_topic:  "vins_estimator/imu_propagate"
 
 # Lidar Params
 use_lidar: 1                     # whether use depth info from lidar or not
@@ -25,6 +22,21 @@ lidar_to_cam_tz: -0.152722
 lidar_to_cam_rx: 1.5543827
 lidar_to_cam_ry: -0.0325844
 lidar_to_cam_rz: 1.520843
+
+#Rotation from laser frame to camera frame, camera^R_laser
+extrinsicRotationLC: !!opencv-matrix
+  rows: 3
+  cols: 3
+  dt: d
+  data: [0.049905,  -0.998222,  -0.032578,
+           0.014766,  0.033353,  -0.999335,
+         0.998645,  0.049391,  0.016405  ]
+#Translation from laser frame to camera frame, camera^T_laser
+extrinsicTranslationLC: !!opencv-matrix
+  rows: 3
+  cols: 1
+  dt: d
+  data: [ -0.061989, -0.061169, -0.152722]
 
 # camera model
 
